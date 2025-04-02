@@ -15,6 +15,7 @@ import { GraphQLContext, Session, SubscriptionContext } from "./util/types";
 import * as dotenv from "dotenv";
 import cors from "cors";
 import { json } from "body-parser";
+import cookieParser from "cookie-parser"; 
 
 dotenv.config();
 
@@ -87,6 +88,7 @@ const main = async () => {
 
   app.use(cors(corsOptions));
   app.use(json());
+  app.use(cookieParser())
 
   // 🔹 Extract session from JWT Token instead of getSession()
   app.use(

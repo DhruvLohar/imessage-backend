@@ -15,7 +15,7 @@ import { GraphQLContext, Session, SubscriptionContext } from "./util/types";
 import * as dotenv from "dotenv";
 import cors from "cors";
 import { json } from "body-parser";
-import cookieParser from "cookie-parser"; 
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -88,15 +88,23 @@ const main = async () => {
 
   app.use(cors(corsOptions));
   app.use(json());
-  app.use(cookieParser())
 
   // 🔹 Extract session from JWT Token instead of getSession()
   app.use(
     "/graphql",
     expressMiddleware(server, {
       context: async ({ req }): Promise<GraphQLContext> => {
-        const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-        return { session: token as Session, prisma, pubsub };
+
+        const token: string = req.headers.authorization || "";
+
+        try {
+          const user = jwt.verify(token, process.env.NEXTAUTH_SECRET); // Verify token
+          console.log("Decoded User:", user);
+          return { session: { user } as Session, prisma, pubsub };
+        } catch (error) {
+          console.error("Invalid Token:", error);
+          return { session: null, prisma, pubsub };
+        }
       },
     })
   );
